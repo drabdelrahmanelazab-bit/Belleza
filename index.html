@@ -1,1 +1,165 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belleza ERP</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6fa;color:#172b4d;font-family:Arial,sans-serif}
+header{background:#102c4e;color:white;padding:22px 18px}
+header h1{margin:0 0 7px;font-size:25px}
+header p{margin:0;color:#c6d7e8}
+nav{display:flex;overflow:auto;background:white;border-bottom:1px solid #ddd}
+nav button{border:0;background:white;padding:15px 17px;white-space:nowrap;font-size:14px}
+nav button.active{color:#087f8c;border-bottom:3px solid #087f8c;font-weight:bold}
+main{padding:16px;max-width:1000px;margin:auto}
+h2{font-size:21px}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card,.panel{background:white;border-radius:13px;padding:17px;margin-bottom:14px;box-shadow:0 2px 8px #142b4b0c}
+.card small{color:#65758b}
+.number{font-size:25px;font-weight:bold;margin-top:10px;color:#087f8c}
+input,select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #ccd5df;border-radius:8px;font-size:15px;background:white}
+label{font-size:14px}
+.btn{background:#087f8c;color:white;border:0;border-radius:8px;padding:12px 16px;font-size:15px;cursor:pointer}
+.secondary{background:#e7eff5;color:#17324e}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:right;padding:11px 8px;border-bottom:1px solid #e8edf2;white-space:nowrap}
+th{background:#f3f6fa}
+.tablewrap{overflow:auto}
+.hidden{display:none}
+.muted{color:#68798c;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>Belleza ERP</h1>
+<p>نظام إدارة بيليزا للتوزيع</p>
+</header>
+<nav id="nav">
+<button class="active" data-page="home">الرئيسية</button>
+<button data-page="items">الأصناف</button>
+<button data-page="suppliers">الشركات</button>
+<button data-page="stock">المخازن</button>
+<button data-page="purchases">المشتريات</button>
+</nav>
+<main>
+<section id="home">
+<h2>لوحة التحكم</h2>
+<p class="muted">ملخص بيانات النظام التجريبي</p>
+<div class="cards">
+<div class="card"><small>عدد الأصناف</small><div class="number" id="count">0</div></div>
+<div class="card"><small>عدد الشركات</small><div class="number" id="supcount">0</div></div>
+<div class="card"><small>إجمالي الوحدات بالمخزن</small><div class="number" id="units">0</div></div>
+<div class="card"><small>قيمة المشتريات المسجلة</small><div class="number" id="buytotal">0</div></div>
+</div>
+<div class="panel">
+<h3>بداية تشغيل بيليزا</h3>
+<p>سجّل الشركات والأصناف أولًا، ثم حدّث الأرصدة وسجّل المشتريات.</p>
+<p class="muted">هذه نسخة تجريبية تحفظ البيانات على هذا المتصفح فقط.</p>
+</div>
+</section>
+
+<section id="items" class="hidden">
+<h2>إدارة الأصناف</h2>
+<div class="panel">
+<label>اسم الصنف</label><input id="iname" placeholder="مثال: شامبو فاتيكا">
+<label>كود الصنف</label><input id="icode" placeholder="كود الصنف">
+<label>الشركة</label><input id="icompany" placeholder="اسم الشركة">
+<label>رصيد المخزن</label><input id="iqty" type="number" min="0" value="0">
+<label>الحد الأدنى</label><input id="imin" type="number" min="0" value="0">
+<label>الحد الأقصى</label><input id="imax" type="number" min="0" value="0">
+<label>سعر الشراء بالجنيه</label><input id="iprice" type="number" min="0" step=".01" value="0">
+<button class="btn" onclick="addItem()">حفظ الصنف</button>
+</div>
+<input id="isearch" placeholder="ابحث باسم الصنف أو الكود..." oninput="renderItems()">
+<div class="panel tablewrap"><table><thead><tr><th>الصنف</th><th>الشركة</th><th>الرصيد</th><th>الحدود</th><th>شراء</th><th></th></tr></thead><tbody id="itemrows"></tbody></table></div>
+</section>
+
+<section id="suppliers" class="hidden">
+<h2>الشركات والموردون</h2>
+<div class="panel">
+<label>اسم الشركة أو المورد</label><input id="sname" placeholder="اسم الشركة">
+<label>رقم الهاتف (اختياري)</label><input id="sphone" placeholder="رقم الهاتف">
+<button class="btn" onclick="addSupplier()">إضافة شركة</button>
+</div>
+<div class="panel tablewrap"><table><thead><tr><th>اسم الشركة</th><th>الهاتف</th><th></th></tr></thead><tbody id="supplierrows"></tbody></table></div>
+</section>
+
+<section id="stock" class="hidden">
+<h2>المخازن والأرصدة</h2>
+<div class="panel">
+<label>اختر الصنف</label><select id="stockitem"></select>
+<label>كمية التعديل (+ إضافة، - صرف)</label><input id="stockchange" type="number" value="0">
+<button class="btn" onclick="adjustStock()">تحديث الرصيد</button>
+</div>
+<div class="panel tablewrap"><table><thead><tr><th>الصنف</th><th>الرصيد</th><th>الحد الأدنى</th><th>الحد الأقصى</th><th>الحالة</th></tr></thead><tbody id="stockrows"></tbody></table></div>
+</section>
+
+<section id="purchases" class="hidden">
+<h2>تسجيل المشتريات</h2>
+<div class="panel">
+<label>الصنف</label><select id="buyitem"></select>
+<label>الكمية المشتراة</label><input id="buyqty" type="number" min="1" value="1">
+<label>سعر شراء الوحدة بالجنيه</label><input id="buyprice" type="number" min="0" step=".01" value="0">
+<button class="btn" onclick="addPurchase()">تسجيل فاتورة الشراء</button>
+<p class="muted">التسجيل يضيف الكمية إلى رصيد الصنف.</p>
+</div>
+<div class="panel tablewrap"><table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead><tbody id="buyrows"></tbody></table></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const load=(key)=>{try{return JSON.parse(localStorage.getItem("belleza_"+key)||"[]")}catch(e){return []}};
+let items=load("items"), suppliers=load("suppliers"), purchases=load("purchases");
+const save=()=>{localStorage.setItem("belleza_items",JSON.stringify(items));localStorage.setItem("belleza_suppliers",JSON.stringify(suppliers));localStorage.setItem("belleza_purchases",JSON.stringify(purchases));render()};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));
+document.querySelectorAll("main section").forEach(x=>x.classList.toggle("hidden",x.id!==b.dataset.page));
+});
+function addItem(){
+let name=$("iname").value.trim(),code=$("icode").value.trim();
+if(!name)return alert("اكتب اسم الصنف أولًا");
+if(items.some(x=>code&&x.code===code))return alert("كود الصنف موجود بالفعل");
+items.push({id:Date.now(),name,code,company:$("icompany").value.trim(),qty:Math.max(0,+$("iqty").value||0),min:Math.max(0,+$("imin").value||0),max:Math.max(0,+$("imax").value||0),price:Math.max(0,+$("iprice").value||0)});
+["iname","icode","icompany"].forEach(x=>$(x).value="");$("iqty").value=0;$("imin").value=0;$("imax").value=0;$("iprice").value=0;save();
+}
+function addSupplier(){
+let name=$("sname").value.trim();if(!name)return alert("اكتب اسم الشركة");
+suppliers.push({id:Date.now(),name,phone:$("sphone").value.trim()});$("sname").value="";$("sphone").value="";save();
+}
+function removeItem(id){if(confirm("حذف الصنف؟")){items=items.filter(x=>x.id!==id);save()}}
+function removeSupplier(id){if(confirm("حذف الشركة؟")){suppliers=suppliers.filter(x=>x.id!==id);save()}}
+function adjustStock(){
+let id=+$("stockitem").value,delta=+$("stockchange").value,x=items.find(x=>x.id===id);
+if(!x)return alert("أضف صنفًا أولًا");if(x.qty+delta<0)return alert("الرصيد لا يكفي للصرف");
+x.qty+=delta;$("stockchange").value=0;save();
+}
+function addPurchase(){
+let x=items.find(x=>x.id===+$("buyitem").value),qty=+$("buyqty").value,price=+$("buyprice").value;
+if(!x)return alert("أضف صنفًا أولًا");if(qty<=0||price<0)return alert("راجع الكمية والسعر");
+purchases.unshift({date:new Date().toLocaleDateString("ar-EG"),name:x.name,qty,price,total:qty*price});
+x.qty+=qty;x.price=price;$("buyqty").value=1;$("buyprice").value=0;save();
+}
+function renderItems(){
+let q=$("isearch").value.toLowerCase();
+$("itemrows").innerHTML=items.filter(x=>(x.name+" "+x.code+" "+x.company).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.name)}<br><small>${esc(x.code)}</small></td><td>${esc(x.company)}</td><td>${x.qty}</td><td>${x.min} / ${x.max}</td><td>${x.price.toFixed(2)}</td><td><button class="btn secondary" onclick="removeItem(${x.id})">حذف</button></td></tr>`).join("")||'<tr><td colspan="6">لا توجد أصناف بعد</td></tr>';
+}
+function render(){
+$("count").textContent=items.length;$("supcount").textContent=suppliers.length;
+$("units").textContent=items.reduce((a,x)=>a+x.qty,0).toLocaleString("en-US");
+$("buytotal").textContent=purchases.reduce((a,x)=>a+x.total,0).toLocaleString("en-US",{maximumFractionDigits:2});
+renderItems();
+$("supplierrows").innerHTML=suppliers.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td><button class="btn secondary" onclick="removeSupplier(${x.id})">حذف</button></td></tr>`).join("")||'<tr><td colspan="3">لا توجد شركات بعد</td></tr>';
+let opts=items.map(x=>`<option value="${x.id}">${esc(x.name)} — ${x.qty} وحدة</option>`).join("");
+$("stockitem").innerHTML=opts;$("buyitem").innerHTML=opts;
+$("stockrows").innerHTML=items.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td>${x.min}</td><td>${x.max}</td><td>${x.qty<=x.min?"يحتاج مراجعة":"متاح"}</td></tr>`).join("")||'<tr><td colspan="5">لا توجد أصناف</td></tr>';
+$("buyrows").innerHTML=purchases.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.name)}</td><td>${x.qty}</td><td>${x.price.toFixed(2)}</td><td>${x.total.toFixed(2)}</td></tr>`).join("")||'<tr><td colspan="5">لا توجد مشتريات بعد</td></tr>';
+}
+render();
+</script>
+</body>
+</html>
+
